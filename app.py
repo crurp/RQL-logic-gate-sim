@@ -53,8 +53,25 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
+def clear_session_data():
+    """Clear all circuit and simulation data from session state."""
+    st.session_state.circuit = None
+    st.session_state.energies = None
+    st.session_state.flux_sweep_data = None
+
+
 def main():
     """Main Streamlit application."""
+    
+    # Initialize session state
+    if 'circuit' not in st.session_state:
+        st.session_state.circuit = None
+    if 'energies' not in st.session_state:
+        st.session_state.energies = None
+    if 'flux_sweep_data' not in st.session_state:
+        st.session_state.flux_sweep_data = None
+    if 'previous_gate_type' not in st.session_state:
+        st.session_state.previous_gate_type = None
     
     # Header
     st.markdown('<div class="main-header">⚛️ RQL Logic Gate Simulator</div>', 
@@ -71,6 +88,24 @@ def main():
             ["Inverter", "A-NOT-B (ANB)", "RQL Loop"],
             index=0
         )
+        
+        # Check if gate type changed and clear data if it did
+        if st.session_state.previous_gate_type is not None:
+            if st.session_state.previous_gate_type != gate_type:
+                clear_session_data()
+                st.session_state.previous_gate_type = gate_type
+                # Streamlit will automatically rerun when selectbox changes
+                st.info("🔄 Gate type changed - previous data cleared")
+        else:
+            st.session_state.previous_gate_type = gate_type
+        
+        # Reset button
+        st.markdown("---")
+        if st.button("🔄 Reset All", use_container_width=True, type="secondary"):
+            clear_session_data()
+            st.session_state.previous_gate_type = None
+            st.success("✅ All data cleared!")
+            st.rerun()
         
         st.subheader("Physical Parameters")
         
@@ -169,13 +204,13 @@ def main():
         with col_btn2:
             simulate_button = st.button("⚡ Run Simulation", use_container_width=True)
         
-        # Initialize session state
-        if 'circuit' not in st.session_state:
-            st.session_state.circuit = None
-        if 'energies' not in st.session_state:
-            st.session_state.energies = None
-        if 'flux_sweep_data' not in st.session_state:
-            st.session_state.flux_sweep_data = None
+        # Add reset button in main area as well
+        reset_button = st.button("🔄 Reset", use_container_width=True, type="secondary")
+        if reset_button:
+            clear_session_data()
+            st.session_state.previous_gate_type = None
+            st.success("✅ All data cleared!")
+            st.rerun()
         
         # Build circuit
         if build_button:
