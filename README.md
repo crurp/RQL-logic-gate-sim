@@ -1,3 +1,5 @@
+[Live Streamlit Demo](https://crurp-rql-logic-gate-sim-app-9d0s4i.streamlit.app/)
+
 # RQL Logic Gate Simulator
 
 A complete Python-based project for simulating Reciprocal Quantum Logic (RQL) gates using SQcircuit as the core library. This simulator focuses on superconductivity modeling with Josephson junctions, flux tunability, and energy spectra analysis for quantum systems aiming at 1M qubit scaling.
