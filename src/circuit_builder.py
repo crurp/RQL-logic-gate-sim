@@ -188,10 +188,9 @@ def build_anb_gate(Ej1=10.0, Ej2=10.0, Ec=0.2, J=0.5, flux1=0.5, flux2=0.5):
         # Create ANB gate with simplified topology
         # Use a single loop with two junctions in series for compatibility with SQcircuit
         # This represents a simplified ANB gate structure
-        loop1 = sq.Loop(value=flux1)
         # Use average flux for the loop (can be extended to two loops in future)
         avg_flux = (flux1 + flux2) / 2
-        loop1.value = avg_flux
+        loop1 = sq.Loop(value=avg_flux)
         
         # Josephson junctions (in GHz)
         # For ANB gate, we use two junctions in series within a single loop

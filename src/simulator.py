@@ -48,8 +48,29 @@ def diagonalize_hamiltonian(circuit, n_levels=10):
             raise ValueError("Circuit object is None")
         
         # Set truncation numbers if not already set
-        if not hasattr(circuit, '_trunc_nums') or circuit._trunc_nums is None:
-            circuit.set_trunc_nums([50])  # Default truncation
+        # Check if truncation is already set (circuit_builder should set it)
+        trunc_already_set = False
+        try:
+            if hasattr(circuit, 'trunc_nums') and circuit.trunc_nums is not None:
+                trunc_already_set = True
+        except:
+            pass
+        
+        if not trunc_already_set:
+            # Try to determine number of modes, or use safe default
+            # For most single-loop circuits, 1 mode is sufficient
+            # But we'll try to be smart about it
+            try:
+                # Try to get the number of modes from the circuit
+                # This is a fallback - circuit_builder should have set it
+                circuit.set_trunc_nums([50])  # Default for single-mode circuits
+            except ValueError:
+                # If that fails, try with 2 modes (for ANB gate)
+                try:
+                    circuit.set_trunc_nums([50, 50])
+                except:
+                    # Last resort: let SQcircuit handle it
+                    pass
         
         # Diagonalize the Hamiltonian
         eigenvals, eigenvecs = circuit.diag(n_eig=n_levels)
