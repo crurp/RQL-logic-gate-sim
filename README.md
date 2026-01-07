@@ -152,6 +152,17 @@ Helper functions for visualization and error handling:
 - `plot_anti_crossing()`: Plot anti-crossing between levels
 - `calculate_gate_metrics()`: Compute gate performance metrics
 
+## Important Notes
+
+### SQcircuit API Compatibility
+
+The circuit builder functions use SQcircuit's API to create superconducting circuits. Note that:
+- Different versions of SQcircuit may have slightly different API requirements
+- Circuit topology (loop closure) requirements may vary
+- If you encounter errors about "inductive loops not specified", you may need to adjust the circuit topology based on your SQcircuit version
+
+The code includes error handling and will provide informative error messages. Please refer to the [SQcircuit documentation](https://sqcircuit.org/) for your specific version.
+
 ## Examples
 
 ### Example 1: Basic Inverter Simulation

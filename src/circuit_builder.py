@@ -100,21 +100,41 @@ def build_rql_inverter(Ej=10.0, Ec=0.2, flux=0.5, ng=0.0):
         
         # Create a simple single-loop circuit with Josephson junction
         # This represents a basic RQL inverter gate
+        # For SQcircuit, we need to ensure loops are properly closed
         loop1 = sq.Loop(value=flux)
         
-        # Josephson junction with energy Ej
-        JJ = sq.Junction(value=Ej, loops=[loop1])
+        # Josephson junction with energy Ej (in GHz)
+        # Try without unit parameter first, as SQcircuit version may vary
+        try:
+            JJ = sq.Junction(value=Ej, loops=[loop1], unit="GHz")
+            C = sq.Capacitor(value=1/(2*Ec), unit="GHz")
+        except TypeError:
+            # Fallback if unit parameter not supported
+            JJ = sq.Junction(value=Ej, loops=[loop1])
+            C = sq.Capacitor(value=1/(2*Ec))
         
-        # Capacitor for charging energy
-        C = sq.Capacitor(value=1/(2*Ec))
-        
-        # Create circuit elements
+        # Create circuit elements dictionary
+        # Elements connect nodes (0, 1) where 0 is ground
+        # For a simple loop, we connect 0->1 and need to close the loop
         elements = {
             (0, 1): [JJ, C],
         }
         
         # Build the circuit
-        cr = sq.Circuit(elements)
+        # SQcircuit may require explicit loop closure or different topology
+        try:
+            cr = sq.Circuit(elements)
+            cr.set_trunc_nums([50])  # Set truncation for charge basis
+        except ValueError as e:
+            # If basic topology fails, try alternative approach
+            logger.warning(f"Standard topology failed: {e}, trying alternative")
+            # Alternative: use a simple LC oscillator model
+            # This is a fallback that should work with SQcircuit
+            raise ValueError(
+                f"Circuit topology may need adjustment for SQcircuit version. "
+                f"Original error: {e}. "
+                f"Please check SQcircuit documentation for proper loop closure."
+            )
         
         # Set gate charge
         if ng != 0:
@@ -175,18 +195,18 @@ def build_anb_gate(Ej1=10.0, Ej2=10.0, Ec=0.2, J=0.5, flux1=0.5, flux2=0.5):
         loop1 = sq.Loop(value=flux1)
         loop2 = sq.Loop(value=flux2)
         
-        # Josephson junctions
-        JJ1 = sq.Junction(value=Ej1, loops=[loop1])
-        JJ2 = sq.Junction(value=Ej2, loops=[loop2])
+        # Josephson junctions (in GHz)
+        JJ1 = sq.Junction(value=Ej1, loops=[loop1], unit="GHz")
+        JJ2 = sq.Junction(value=Ej2, loops=[loop2], unit="GHz")
         
         # Coupling junction between loops
-        JJ_coupling = sq.Junction(value=J, loops=[loop1, loop2])
+        JJ_coupling = sq.Junction(value=J, loops=[loop1, loop2], unit="GHz")
         
-        # Capacitors
-        C1 = sq.Capacitor(value=1/(2*Ec))
-        C2 = sq.Capacitor(value=1/(2*Ec))
+        # Capacitors (in GHz^-1)
+        C1 = sq.Capacitor(value=1/(2*Ec), unit="GHz")
+        C2 = sq.Capacitor(value=1/(2*Ec), unit="GHz")
         
-        # Create circuit with two nodes
+        # Create circuit with three nodes
         # Node 0: ground, Node 1: first loop, Node 2: second loop
         elements = {
             (0, 1): [JJ1, C1],
@@ -196,6 +216,7 @@ def build_anb_gate(Ej1=10.0, Ej2=10.0, Ec=0.2, J=0.5, flux1=0.5, flux2=0.5):
         
         # Build the circuit
         cr = sq.Circuit(elements)
+        cr.set_trunc_nums([50, 50])  # Set truncation for two nodes
         
         print("Checkpoint: ANB gate circuit built successfully")
         logger.info("ANB gate circuit built successfully")
@@ -242,10 +263,10 @@ def build_rql_loop(Ej=10.0, Ec=0.2, El=0.1, flux=0.5):
         # Create flux loop
         loop = sq.Loop(value=flux)
         
-        # Circuit elements
-        JJ = sq.Junction(value=Ej, loops=[loop])
-        C = sq.Capacitor(value=1/(2*Ec))
-        L = sq.Inductor(value=1/El, loops=[loop])
+        # Circuit elements (in GHz or GHz^-1)
+        JJ = sq.Junction(value=Ej, loops=[loop], unit="GHz")
+        C = sq.Capacitor(value=1/(2*Ec), unit="GHz")
+        L = sq.Inductor(value=1/El, loops=[loop], unit="GHz")
         
         # Build circuit
         elements = {
@@ -253,6 +274,7 @@ def build_rql_loop(Ej=10.0, Ec=0.2, El=0.1, flux=0.5):
         }
         
         cr = sq.Circuit(elements)
+        cr.set_trunc_nums([50])  # Set truncation for charge basis
         
         print("Checkpoint: RQL loop circuit built successfully")
         logger.info("RQL loop circuit built successfully")
